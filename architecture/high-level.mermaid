@@ -1,0 +1,59 @@
+%% LLM Agent Orchestration — High-Level Architecture
+%% Render with any Mermaid-compatible tool (GitHub, VS Code, mermaid.live)
+
+graph TB
+    subgraph Clients["Client Interfaces"]
+        CLI["CLI Interface<br/>(Interactive Terminal)"]
+        API["REST API<br/>(FastAPI + Uvicorn)"]
+        WEBUI["Open WebUI<br/>(Browser Chat)"]
+    end
+
+    subgraph AgentRuntime["Agent Runtime"]
+        direction TB
+        ORCH["LangGraph Orchestrator<br/>(ReAct StateGraph)"]
+        STATE["Conversation Memory<br/>(MemorySaver + thread_id)"]
+        DISPATCH["Tool Dispatcher"]
+    end
+
+    subgraph LLMLayer["Local LLM Inference"]
+        OLLAMA["Ollama Server"]
+        subgraph Models["Model Store"]
+            M3B["3B<br/>(2GB VRAM)"]
+            M7B["7B<br/>(5GB VRAM)"]
+            M14B["14B<br/>(9GB VRAM)"]
+            M32B["32B<br/>(20GB VRAM)"]
+            M70B["70B<br/>(40GB VRAM)"]
+        end
+        GPU["GPU Hardware<br/>(CUDA / Apple Metal)"]
+    end
+
+    subgraph Tools["Tool Ecosystem"]
+        subgraph BuiltIn["Built-in Tools"]
+            SEARCH["Web Search<br/>(DuckDuckGo)"]
+            FILES["File I/O"]
+            CALC["Calculator"]
+            SYSINFO["System Info"]
+            SHELL["Shell Exec"]
+        end
+        subgraph MCP["MCP Integration"]
+            MCPC["MCP HTTP/SSE Client<br/>(JSON-RPC 2.0)"]
+            SN["ITSM"]
+            CRM2["CRM"]
+            EHR2["EHR"]
+            CUSTOM["Custom Platforms"]
+        end
+    end
+
+    CLI & API & WEBUI --> ORCH
+    ORCH <--> STATE
+    ORCH --> DISPATCH
+    DISPATCH --> BuiltIn
+    DISPATCH --> MCPC
+    MCPC --> SN & CRM2 & EHR2 & CUSTOM
+    ORCH <--> OLLAMA
+    OLLAMA --> Models
+    Models --> GPU
+
+    style GPU fill:#f96,stroke:#333
+    style ORCH fill:#69f,stroke:#333
+    style MCPC fill:#6c6,stroke:#333
